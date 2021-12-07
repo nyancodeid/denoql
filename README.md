@@ -44,3 +44,5 @@ $ deno run -A --unstable https://deno.land/x/denoql/serve.ts
 # direct run server with custom port
 $ deno run -A --unstable https://deno.land/x/denoql/serve.ts --port=3000
 ```
+
+Tested out on Deno `v1.16.x`
