@@ -8,10 +8,10 @@ import {
   GraphQLNonNull,
   GraphQLInterfaceType,
   GraphQLList
-} from "https://cdn.skypack.dev/graphql@^16.0.0";
+} from "./deps.ts";
 
-import { Url } from "https://cdn.skypack.dev/reurl"
-import { JSDOM } from "https://jspm.dev/npm:jsdom-deno@19.0.1";
+import { Url } from "./deps.ts"
+import { JSDOM } from "./deps.ts";
 
 type TParams = {
   selector?: string

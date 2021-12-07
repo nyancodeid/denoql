@@ -1,9 +1,7 @@
-import { assertEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
+import { assertEquals } from "./deps.ts";
 
-import * as GraphQL from "https://cdn.pika.dev/graphql@^16.0.0";
+import { graphql } from "./deps.ts";
 import { schema } from "./schema.ts"
-
-const { graphql } = GraphQL;
 
 Deno.test({
   name: "no args throws errors #1",

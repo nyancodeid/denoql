@@ -1,10 +1,8 @@
-import { opine, json } from "https://deno.land/x/opine@2.0.0/mod.ts";
-import * as GraphQL from "https://cdn.pika.dev/graphql@^16.0.0";
+import { opine, json } from "./deps.ts";
+import { graphql } from "./deps.ts";
 
 import { prismqlPlayground } from "./web.ts"
 import { schema } from "./schema.ts"
-
-const { graphql } = GraphQL;
 
 export function createServer(port: string | number = "8080"): void {
   const app = opine();
