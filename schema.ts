@@ -12,6 +12,7 @@ import {
 
 import { Url } from "./deps.ts"
 import { JSDOM } from "./deps.ts";
+import { ParseDOM } from "./parser.ts"
 
 type TParams = {
   selector?: string
@@ -236,7 +237,7 @@ const TElement = new GraphQLObjectType({
         if (href == null) return null
 
         const base = new Url(href.value);
-        const uri = base.resolve(element.ownerDocument.location.href);
+        const uri = base.resolve(element.url);
         const url = uri.toString();
 
         const html = await fetch(url).then(res => res.text())
@@ -272,19 +273,15 @@ export const schema = new GraphQLSchema({
             )
           }
 
-          let html = source;
-          let options = <{
-            url?: string
-          }>{};
+          const dom = new ParseDOM()
 
           if (url != null) {
-            html = await fetch(url).then(res => res.text())
-            options.url = url;
+            await dom.useUrl(url)
+          } else if (source != null) {
+            await dom.useSource(source)
           }
 
-          const dom = new JSDOM(html, options)
-
-          return dom.window.document.documentElement
+          return dom;
         },
       },
     }),
