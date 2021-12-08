@@ -1,28 +1,36 @@
-import { opine, json } from "./deps.ts";
-import { graphql } from "./deps.ts";
+import { serve } from "./deps.ts";
+import { useQuery } from './schema.ts'
 
 import { prismqlPlayground } from "./web.ts"
-import { schema } from "./schema.ts"
 
-export function createServer(port: string | number = "8080"): void {
-  const app = opine();
+export function createServer(port: string | number) {
+  async function handler(req: Request): Promise<Response> {
+    switch (req.method) {
+      case "GET": {
+        return new Response(prismqlPlayground(port), {
+          headers: { "content-type": "text/html" },
+        })
+      }
+      case "POST": {
+        const body = await req.json();
+        const query = body.query;
 
-  app.use(json());
+        const response = await useQuery(query);
 
-  app.get('/graphql', (req, res) => {
-    // Return the static HTML for the GraphiQL IDE
-    res.send(prismqlPlayground(port));
-  });
+        return new Response(JSON.stringify(response, null, 2), {
+          headers: { "content-type": "application/json; charset=utf-8" },
+        });
+      }
+      default:
+        return new Response("Invalid Method", {
+          headers: { "content-type": "text/html" },
+        })
+    }
+  }
 
-  app.post('/graphql', async (req, res) => {
-    const query = req.body.query
+  console.log(`GraphQL Server running on http://localhost:${port}/graphql`);
 
-    graphql({ schema, source: query }).then((response => {
-      res.json(response)
-    }))
-  });
-
-  app.listen(Number(port), () => {
-    console.log(`GraphQL Server running on http://localhost:${port}/graphql`);
+  serve(handler, {
+    addr: `0.0.0.0:${port}`
   });
 }
