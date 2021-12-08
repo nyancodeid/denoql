@@ -7,11 +7,12 @@ import {
   GraphQLObjectType,
   GraphQLNonNull,
   GraphQLInterfaceType,
-  GraphQLList
+  GraphQLList,
+  DOMParser,
+  Element
 } from "./deps.ts";
 
 import { Url } from "./deps.ts"
-import { JSDOM } from "./deps.ts";
 
 type TParams = {
   selector?: string
@@ -31,8 +32,9 @@ function sharedFields() {
       type: GraphQLString,
       description: 'The HTML content of the subnodes',
       args: { selector },
-      resolve(element: any, { selector }: TParams) {
-        element = selector ? element.querySelector(selector) : element
+      resolve(element: Element, { selector }: TParams) {
+        element = selector ? element.querySelector(selector)! : element
+
         return element && element.innerHTML
       },
     },
@@ -40,8 +42,9 @@ function sharedFields() {
       type: GraphQLString,
       description: 'The HTML content of the selected DOM node',
       args: { selector },
-      resolve(element: any, { selector }: TParams) {
-        element = selector ? element.querySelector(selector) : element
+      resolve(element: Element, { selector }: TParams) {
+        element = selector ? element.querySelector(selector)! : element
+
         return element && element.outerHTML
       },
     },
@@ -49,8 +52,9 @@ function sharedFields() {
       type: GraphQLString,
       description: 'The text content of the selected DOM node',
       args: { selector },
-      resolve(element: any, { selector }: TParams) {
-        element = selector ? element.querySelector(selector) : element
+      resolve(element: Element, { selector }: TParams) {
+        element = selector ? element.querySelector(selector)! : element
+
         return element && element.textContent
       },
     },
@@ -58,8 +62,9 @@ function sharedFields() {
       type: GraphQLString,
       description: 'The tag name of the selected DOM node',
       args: { selector },
-      resolve(element: any, { selector }: TParams) {
-        element = selector ? element.querySelector(selector) : element
+      resolve(element: Element, { selector }: TParams) {
+        element = selector ? element.querySelector(selector)! : element
+
         return element && element.tagName
       },
     },
@@ -74,28 +79,31 @@ function sharedFields() {
           description: 'The name of the attribute',
         },
       },
-      resolve(element: any, { selector, name }: TParams) {
-        element = selector ? element.querySelector(selector) : element
+      resolve(element: Element, { selector, name }: TParams) {
+        element = selector ? element.querySelector(selector)! : element
         if (element == null || name == null) return null
 
-        const attribute = element.attributes[name]
+        const attribute = element.getAttribute(name)
         if (attribute == null) return null
-        return attribute.value
+
+        return attribute
       },
     },
     has: {
       type: GraphQLBoolean,
       description: 'Returns true if an element with the given selector exists.',
       args: { selector },
-      resolve(element: any, { selector }: TParams) {
-        return !!element.querySelector(selector)
+      resolve(element: Element, { selector }: TParams) {
+        return !!element.querySelector(selector!)
       },
     },
     count: {
       type: GraphQLInt,
       description: 'The count of the selected DOM node',
       args: { selector },
-      resolve(element: any, { selector }: TParams) {
+      resolve(element: Element, { selector }: TParams) {
+        if (!selector) return 0;
+
         return Array.from(element.querySelectorAll(selector)).length
       },
     },
@@ -104,8 +112,8 @@ function sharedFields() {
       description:
         'Equivalent to [Element.querySelector](https://developer.mozilla.org/en-US/docs/Web/API/Element/querySelector). The selectors of any nested queries will be scoped to the resulting element.',
       args: { selector },
-      resolve(element: any, { selector }: TParams) {
-        return element.querySelector(selector)
+      resolve(element: Element, { selector }: TParams) {
+        return element.querySelector(selector!)
       },
     },
     queryAll: {
@@ -113,28 +121,28 @@ function sharedFields() {
       description:
         'Equivalent to [Element.querySelectorAll](https://developer.mozilla.org/en-US/docs/Web/API/Element/querySelectorAll). The selectors of any nested queries will be scoped to the resulting elements.',
       args: { selector },
-      resolve(element: any, { selector }: TParams) {
-        return Array.from(element.querySelectorAll(selector))
+      resolve(element: Element, { selector }: TParams) {
+        return Array.from(element.querySelectorAll(selector!))
       },
     },
     children: {
       type: new GraphQLList(TElement),
       description: "An element's child elements.",
-      resolve(element: any) {
+      resolve(element: Element) {
         return Array.from(element.children)
       },
     },
     childNodes: {
       type: new GraphQLList(TElement),
       description: "An element's child nodes. Includes text nodes.",
-      resolve(element: any) {
+      resolve(element: Element) {
         return Array.from(element.childNodes)
-      }
+      },
     },
     parent: {
       type: TElement,
       description: "An element's parent element.",
-      resolve(element: any) {
+      resolve(element: Element) {
         return element.parentElement
       },
     },
@@ -142,9 +150,10 @@ function sharedFields() {
       type: new GraphQLList(TElement),
       description:
         "All elements which are at the same level in the tree as the current element, ie. the children of the current element's parent. Includes the current element.",
-      resolve(element: any) {
+      resolve(element: Element) {
         const parent = element.parentElement
         if (parent == null) return [element]
+
         return Array.from(parent.children)
       },
     },
@@ -152,14 +161,14 @@ function sharedFields() {
       type: TElement,
       description:
         "The current element's next sibling. Includes text nodes. Equivalent to [Node.nextSibling](https://developer.mozilla.org/en-US/docs/Web/API/Node/nextSibling).",
-      resolve(element: any) {
+      resolve(element: Element) {
         return element.nextSibling
       },
     },
     nextAll: {
       type: new GraphQLList(TElement),
       description: "All of the current element's next siblings",
-      resolve(element: any, { selector }: TParams) {
+      resolve(element: Element, { selector }: TParams) {
         const siblings = []
         for (
           let next = element.nextSibling;
@@ -175,14 +184,14 @@ function sharedFields() {
       type: TElement,
       description:
         "The current element's previous sibling. Includes text nodes. Equivalent to [Node.previousSibling](https://developer.mozilla.org/en-US/docs/Web/API/Node/nextSibling).",
-      resolve(element: any) {
+      resolve(element: Element) {
         return element.previousSibling
       },
     },
     previousAll: {
       type: new GraphQLList(TElement),
       description: "All of the current element's previous siblings",
-      resolve(element: any, { selector }: TParams) {
+      resolve(element: Element) {
         const siblings = []
         for (
           let previous = element.previousSibling;
@@ -213,8 +222,8 @@ const TDocument = new GraphQLObjectType({
     title: {
       type: GraphQLString,
       description: 'The page title',
-      resolve(element: any) {
-        return element.ownerDocument.title;
+      resolve(element: Element) {
+        return element?.ownerDocument?.title
       },
     },
   }),
@@ -230,19 +239,25 @@ const TElement = new GraphQLObjectType({
       type: TDocument,
       description:
         'If the element is a link, visit the page linked to in the href attribute.',
-      async resolve(element: any) {
-        const href = element.attributes['href']
+      async resolve(element: Element) {
+        const href = element.getAttribute('href')
+        const baseUrl = element.getAttribute('data-baseurl');
 
         if (href == null) return null
 
-        const base = new Url(href.value);
-        const uri = base.resolve(element.ownerDocument.location.href);
-        const url = uri.toString();
+        let url = href;
 
-        const html = await fetch(url).then(res => res.text())
-        const dom = new JSDOM(html, { url })
+        if (baseUrl) {
+          const base = new Url(href);
+          const uri = base.resolve(baseUrl);
 
-        return dom.window.document.documentElement
+          url = uri.toString();
+        }
+
+        const html = await fetch(url).then(res => res.text());
+        const dom = new DOMParser().parseFromString(html, 'text/html')
+
+        return dom?.documentElement;
       },
     },
   }),
@@ -266,25 +281,23 @@ export const schema = new GraphQLSchema({
           },
         },
         async resolve(_: any, { url, source }: TParams) {
-          if (url == null && source == null) {
+          if (!url && !source) {
             throw new Error(
               'You need to provide either a URL or a HTML source string.'
             )
           }
 
-          let html = source;
-          let options = <{
-            url?: string
-          }>{};
-
-          if (url != null) {
-            html = await fetch(url).then(res => res.text())
-            options.url = url;
+          if (url) {
+            source = await fetch(url).then(res => res.text());
           }
 
-          const dom = new JSDOM(html, options)
+          if (source && url) {
+            source = source.replaceAll('href=', `data-baseurl='${url}' href=`)
+          }
 
-          return dom.window.document.documentElement
+          const dom = new DOMParser().parseFromString(source!, 'text/html')!
+
+          return dom.documentElement;
         },
       },
     }),
