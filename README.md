@@ -1,5 +1,5 @@
-# DenoQL: Deno GraphQL Scrapper
-GraphQL Scrapper using Deno
+# DenoQL: Deno GraphQL Scraper
+GraphQL Scraper using Deno
 
 ## Example
 ```ts
