@@ -21,6 +21,13 @@ type TParams = {
   source?: string
 }
 
+function getAttributeOfElement(element: Element, name: string) {
+  const attribute = element.getAttribute(name)
+  if (attribute == null) return null
+
+  return attribute
+}
+
 function sharedFields() {
   const selector = {
     type: GraphQLString,
@@ -87,6 +94,65 @@ function sharedFields() {
         if (attribute == null) return null
 
         return attribute
+      },
+    },
+    href: {
+      type: GraphQLString,
+      description:
+        'An href attribute of the selected node.',
+      args: {
+        selector
+      },
+      resolve(element: Element, { selector }: TParams) {
+        element = selector ? element.querySelector(selector)! : element
+        if (element == null) return null
+
+        return getAttributeOfElement(element, "href")
+      },
+    },
+    src: {
+      type: GraphQLString,
+      description:
+        'An src attribute of the selected node.',
+      args: {
+        selector
+      },
+      resolve(element: Element, { selector }: TParams) {
+        element = selector ? element.querySelector(selector)! : element
+        if (element == null) return null
+
+        return getAttributeOfElement(element, "src")
+      },
+    },
+    class: {
+      type: GraphQLString,
+      description:
+        'An src attribute of the selected node.',
+      args: {
+        selector
+      },
+      resolve(element: Element, { selector }: TParams) {
+        element = selector ? element.querySelector(selector)! : element
+        if (element == null) return null
+
+        return getAttributeOfElement(element, "class")
+      },
+    },
+    classList: {
+      type: new GraphQLList(GraphQLString),
+      description:
+        'An src attribute of the selected node.',
+      args: {
+        selector
+      },
+      resolve(element: Element, { selector }: TParams) {
+        element = selector ? element.querySelector(selector)! : element
+        if (element == null) return null
+
+        const attribute = getAttributeOfElement(element, "class")
+        if (attribute == null) return null
+
+        return attribute.split(" ")
       },
     },
     has: {
