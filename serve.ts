@@ -1,13 +1,8 @@
 import { createServer } from './mod.ts'
+import { parse } from "https://deno.land/std@0.117.0/flags/mod.ts";
 
-let port: number = 8080;
+const DEFAULT_PORT = 8080;
 
-Deno.args.forEach(element => {
-  if (element.includes('--port')) {
-    const _port = element.split('=');
+const { port } = parse(Deno.args)
 
-    port = Number(_port[1].trim());
-  }
-});
-
-createServer(port)
+createServer((port) ? port : DEFAULT_PORT)
