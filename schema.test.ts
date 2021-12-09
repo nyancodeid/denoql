@@ -1,17 +1,18 @@
 import { assertEquals } from "./deps.ts";
 
-import { graphql } from "./deps.ts";
-import { schema } from "./schema.ts"
+import { useQuery } from "./schema.ts"
+
+const DEFAULT_TEST_OPTIONS = {
+  sanitizeOps: false,
+  sanitizeResources: false
+}
 
 Deno.test({
   name: "no args throws errors #1",
   fn: async () => {
     const query = `{ page { title } }`
 
-    const response = await graphql({
-      schema,
-      source: query
-    })
+    const response = await useQuery(query)
 
     assertEquals(
       response && response.errors && response.errors[0].message,
@@ -26,16 +27,12 @@ Deno.test({
     const html = `<html><head><title>some title</title></head><body></body></html>`
     const query = `{ page(source: "${html}") { title } }`
 
-    const response = await graphql({
-      schema,
-      source: query
-    })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(response.data && response.data.page.title, 'some title')
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 });
 
 Deno.test({
@@ -46,16 +43,12 @@ Deno.test({
         title
       }
     }`
-    const response = await graphql({
-      schema,
-      source: query
-    })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(response.data && response.data.page.title, 'some title');
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -64,10 +57,7 @@ Deno.test({
     const html = `<html><head><title>some title</title></head><body>some body</body></html>`
     const query = `{ page(source: "${html}") { content } }`
 
-    const response = await graphql({
-      schema,
-      source: query
-    })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
@@ -75,8 +65,7 @@ Deno.test({
       '<head><title>some title</title></head><body>some body</body>'
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -89,10 +78,7 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({
-      schema,
-      source: query
-    })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
@@ -100,8 +86,7 @@ Deno.test({
       '<strong>bad</strong>'
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -114,10 +99,7 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({
-      schema,
-      source: query
-    })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
@@ -125,8 +107,7 @@ Deno.test({
       null
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -135,10 +116,7 @@ Deno.test({
     const html = `<html><head><title>some title</title></head><body>some body</body></html>`
     const query = `{ page(source: "${html}") { html } }`
 
-    const response = await graphql({
-      schema,
-      source: query
-    })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
@@ -146,8 +124,7 @@ Deno.test({
       html
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -160,10 +137,7 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({
-      schema,
-      source: query
-    })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
@@ -171,8 +145,7 @@ Deno.test({
       '<div class="selectme"><strong>bad</strong></div>'
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -185,18 +158,14 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({
-      schema,
-      source: query
-    })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
       response.data && response.data.page.text, 'some titlebad'
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -209,15 +178,14 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
       response.data && response.data.page.text, 'bad'
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -230,15 +198,14 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
       response.data && response.data.page.tag, 'HTML'
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -251,15 +218,14 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
       response.data && response.data.page.tag, 'DIV'
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -272,15 +238,14 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
       response.data && response.data.page.attr, 'background: red;'
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -293,15 +258,14 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
       response.data && response.data.page.attr, null
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -314,15 +278,14 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
       response.data && response.data.page.attr, 'selectme'
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -337,7 +300,7 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
@@ -345,8 +308,7 @@ Deno.test({
       true
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -361,7 +323,7 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
@@ -369,8 +331,7 @@ Deno.test({
       true
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -385,15 +346,14 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
       response.data && response.data.page.firstDiv, { text: 'one' }
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -408,7 +368,7 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
@@ -419,8 +379,7 @@ Deno.test({
       ]
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -437,7 +396,7 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
@@ -452,8 +411,7 @@ Deno.test({
       ]
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -470,7 +428,7 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
@@ -485,8 +443,7 @@ Deno.test({
       ]
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -503,15 +460,14 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
       response.data && response.data.page.query.parent.attr, 'selectme'
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -528,7 +484,7 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
@@ -540,8 +496,7 @@ Deno.test({
       ]
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -556,15 +511,14 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
       response.data && response.data.page.siblings, [{ tag: 'HTML' }]
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -581,15 +535,14 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
       response.data && response.data.page.query.next.text, 'boom'
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -607,7 +560,7 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
@@ -617,8 +570,7 @@ Deno.test({
       response.data && response.data.page.query.next.text, 'bare text'
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -636,7 +588,7 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
@@ -647,8 +599,7 @@ Deno.test({
       ]
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -665,15 +616,14 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
       response.data && response.data.page.query.previous.text, 'boom'
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -691,7 +641,7 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
@@ -702,8 +652,7 @@ Deno.test({
       ]
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -721,7 +670,7 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
@@ -732,8 +681,7 @@ Deno.test({
       ]
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -749,7 +697,7 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
@@ -757,8 +705,7 @@ Deno.test({
       'we managed to visit the link!'
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
@@ -773,13 +720,124 @@ Deno.test({
       }
     }`
 
-    const response = await graphql({ schema, source: query })
+    const response = await useQuery(query)
 
     assertEquals(('error' in response), false);
     assertEquals(
       response.data && response.data.page.query.count, 2
     )
   },
-  sanitizeOps: false,
-  sanitizeResources: false
+  ...DEFAULT_TEST_OPTIONS
+})
+
+Deno.test({
+  name: "href #32",
+  fn: async () => {
+    const html = `<html><head><title>some title</title></head><body><a href=\\"https://nyan.web.id\\">Item 1</a></body></html>`
+    const query = `{
+      page(source: "${html}") {
+        query(selector: "a") {
+          href
+        }
+        link: href(selector: "a")
+      }
+    }`
+
+    const response = await useQuery(query)
+
+    assertEquals(('error' in response), false);
+    assertEquals(
+      response.data && response.data.page.query.href,
+      "https://nyan.web.id"
+    )
+    assertEquals(
+      response.data && response.data.page.link,
+      "https://nyan.web.id"
+    )
+  },
+  ...DEFAULT_TEST_OPTIONS
+})
+
+Deno.test({
+  name: "src #33",
+  fn: async () => {
+    const html = `<html><head><title>some title</title></head><body><img src=\\"https://nyan.web.id/screenshot.png\\" /></body></html>`
+    const query = `{
+      page(source: "${html}") {
+        query(selector: "img") {
+          src
+        }
+        image: src(selector: "img")
+      }
+    }`
+
+    const response = await useQuery(query)
+
+    assertEquals(('error' in response), false);
+    assertEquals(
+      response.data && response.data.page.query.src,
+      "https://nyan.web.id/screenshot.png"
+    )
+    assertEquals(
+      response.data && response.data.page.image,
+      "https://nyan.web.id/screenshot.png"
+    )
+  },
+  ...DEFAULT_TEST_OPTIONS
+})
+
+Deno.test({
+  name: "class #34",
+  fn: async () => {
+    const html = `<html><head><title>some title</title></head><body><div class=\\"mx-2 my-4 bg-gray-100\\"></div></body></html>`
+    const query = `{
+      page(source: "${html}") {
+        query(selector: "div") {
+          class
+        }
+        box: class(selector: "div")
+      }
+    }`
+
+    const response = await useQuery(query)
+
+    assertEquals(('error' in response), false);
+    assertEquals(
+      response.data && response.data.page.query.class,
+      "mx-2 my-4 bg-gray-100"
+    )
+    assertEquals(
+      response.data && response.data.page.box,
+      "mx-2 my-4 bg-gray-100"
+    )
+  },
+  ...DEFAULT_TEST_OPTIONS
+})
+
+Deno.test({
+  name: "classList #34",
+  fn: async () => {
+    const html = `<html><head><title>some title</title></head><body><div class=\\"mx-2 my-4 bg-gray-100\\"></div></body></html>`
+    const query = `{
+      page(source: "${html}") {
+        query(selector: "div") {
+          classList
+        }
+        classes: classList(selector: "div")
+      }
+    }`
+
+    const response = await useQuery(query)
+
+    assertEquals(('error' in response), false);
+    assertEquals(
+      response.data && response.data.page.query.classList,
+      ["mx-2", "my-4", "bg-gray-100"]
+    )
+    assertEquals(
+      response.data && response.data.page.classes,
+      ["mx-2", "my-4", "bg-gray-100"]
+    )
+  },
+  ...DEFAULT_TEST_OPTIONS
 })
