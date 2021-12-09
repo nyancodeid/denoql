@@ -727,6 +727,117 @@ Deno.test({
       response.data && response.data.page.query.count, 2
     )
   },
+  ...DEFAULT_TEST_OPTIONS
 })
 
 Deno.test({
+  name: "href #32",
+  fn: async () => {
+    const html = `<html><head><title>some title</title></head><body><a href=\\"https://nyan.web.id\\">Item 1</a></body></html>`
+    const query = `{
+      page(source: "${html}") {
+        query(selector: "a") {
+          href
+        }
+        link: href(selector: "a")
+      }
+    }`
+
+    const response = await useQuery(query)
+
+    assertEquals(('error' in response), false);
+    assertEquals(
+      response.data && response.data.page.query.href,
+      "https://nyan.web.id"
+    )
+    assertEquals(
+      response.data && response.data.page.link,
+      "https://nyan.web.id"
+    )
+  },
+  ...DEFAULT_TEST_OPTIONS
+})
+
+Deno.test({
+  name: "src #33",
+  fn: async () => {
+    const html = `<html><head><title>some title</title></head><body><img src=\\"https://nyan.web.id/screenshot.png\\" /></body></html>`
+    const query = `{
+      page(source: "${html}") {
+        query(selector: "img") {
+          src
+        }
+        image: src(selector: "img")
+      }
+    }`
+
+    const response = await useQuery(query)
+
+    assertEquals(('error' in response), false);
+    assertEquals(
+      response.data && response.data.page.query.src,
+      "https://nyan.web.id/screenshot.png"
+    )
+    assertEquals(
+      response.data && response.data.page.image,
+      "https://nyan.web.id/screenshot.png"
+    )
+  },
+  ...DEFAULT_TEST_OPTIONS
+})
+
+Deno.test({
+  name: "class #34",
+  fn: async () => {
+    const html = `<html><head><title>some title</title></head><body><div class=\\"mx-2 my-4 bg-gray-100\\"></div></body></html>`
+    const query = `{
+      page(source: "${html}") {
+        query(selector: "div") {
+          class
+        }
+        box: class(selector: "div")
+      }
+    }`
+
+    const response = await useQuery(query)
+
+    assertEquals(('error' in response), false);
+    assertEquals(
+      response.data && response.data.page.query.class,
+      "mx-2 my-4 bg-gray-100"
+    )
+    assertEquals(
+      response.data && response.data.page.box,
+      "mx-2 my-4 bg-gray-100"
+    )
+  },
+  ...DEFAULT_TEST_OPTIONS
+})
+
+Deno.test({
+  name: "classList #34",
+  fn: async () => {
+    const html = `<html><head><title>some title</title></head><body><div class=\\"mx-2 my-4 bg-gray-100\\"></div></body></html>`
+    const query = `{
+      page(source: "${html}") {
+        query(selector: "div") {
+          classList
+        }
+        classes: classList(selector: "div")
+      }
+    }`
+
+    const response = await useQuery(query)
+
+    assertEquals(('error' in response), false);
+    assertEquals(
+      response.data && response.data.page.query.classList,
+      ["mx-2", "my-4", "bg-gray-100"]
+    )
+    assertEquals(
+      response.data && response.data.page.classes,
+      ["mx-2", "my-4", "bg-gray-100"]
+    )
+  },
+  ...DEFAULT_TEST_OPTIONS
+})
