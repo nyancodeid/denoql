@@ -815,7 +815,7 @@ Deno.test({
 })
 
 Deno.test({
-  name: "classList #34",
+  name: "classList #35",
   fn: async () => {
     const html = `<html><head><title>some title</title></head><body><div class=\\"mx-2 my-4 bg-gray-100\\"></div></body></html>`
     const query = `{
@@ -837,6 +837,42 @@ Deno.test({
     assertEquals(
       response.data && response.data.page.classes,
       ["mx-2", "my-4", "bg-gray-100"]
+    )
+  },
+  ...DEFAULT_TEST_OPTIONS
+})
+
+Deno.test({
+  name: "index #36",
+  fn: async () => {
+    const html = `<html><head><title>some title</title></head><body><div class=\\"one\\"><strong>one</strong><strong>two</strong><strong>three</strong></div><div class=\\"two\\"><strong>one</strong></body></html>`
+    const query = `{
+      page(source: "${html}") {
+        childs: queryAll(selector: "div.one strong") {
+          index
+          text
+        }
+        child: query(selector: "div.two strong") {
+          index
+          text
+        }
+      }
+    }`
+
+    const response = await useQuery(query)
+
+    assertEquals(('error' in response), false);
+    assertEquals(
+      response.data && response.data.page.childs,
+      [
+        { index: 0, text: "one" },
+        { index: 1, text: "two" },
+        { index: 2, text: "three" }
+      ]
+    )
+    assertEquals(
+      response.data && response.data.page.child,
+      { index: 0, text: "one" }
     )
   },
   ...DEFAULT_TEST_OPTIONS
