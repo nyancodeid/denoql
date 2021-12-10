@@ -173,6 +173,20 @@ function sharedFields() {
         return Array.from(element.querySelectorAll(selector)).length
       },
     },
+    index: {
+      type: GraphQLInt,
+      description: 'The index of the selected DOM node from parent selector',
+      args: { selector },
+      resolve(element: Element, { selector }: TParams) {
+        element = selector ? element.querySelector(selector)! : element
+        if (element == null) return null
+
+        return Array.prototype.indexOf.call(
+          element.parentElement?.children,
+          element
+        );
+      },
+    },
     query: {
       type: TElement,
       description:
