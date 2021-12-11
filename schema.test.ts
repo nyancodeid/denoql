@@ -845,11 +845,11 @@ Deno.test({
 Deno.test({
   name: "index #36",
   fn: async () => {
-    const html = `<html><head><title>some title</title></head><body><div class=\\"one\\"><strong>one</strong><strong>two</strong><strong>three</strong></div><div class=\\"two\\"><strong>one</strong></body></html>`
+    const html = `<html><head><title>some title</title></head><body><div class=\\"one\\"><p>some text</p><strong>one</strong><strong>two</strong><p>some text</p><strong>three</strong></div><div class=\\"two\\"><strong>one</strong></body></html>`
     const query = `{
       page(source: "${html}") {
         childs: queryAll(selector: "div.one strong") {
-          index
+          index(parent: "div.one strong")
           text
         }
         child: query(selector: "div.two strong") {

@@ -16,6 +16,7 @@ import { Url } from "./deps.ts"
 
 type TParams = {
   selector?: string
+  parent?: string
   name?: string
   url?: string
   source?: string
@@ -176,13 +177,15 @@ function sharedFields() {
     index: {
       type: GraphQLInt,
       description: 'The index of the selected DOM node from parent selector',
-      args: { selector },
-      resolve(element: Element, { selector }: TParams) {
+      args: { selector, parent: selector },
+      resolve(element: Element, { selector, parent }: TParams) {
         element = selector ? element.querySelector(selector)! : element
         if (element == null) return null
 
+        let parentElement = parent ? element.parentElement?.querySelectorAll(parent) : element.parentElement?.children
+
         return Array.prototype.indexOf.call(
-          element.parentElement?.children,
+          parentElement,
           element
         );
       },
