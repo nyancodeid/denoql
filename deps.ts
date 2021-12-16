@@ -7,8 +7,14 @@ export {
   GraphQLObjectType,
   GraphQLNonNull,
   GraphQLInterfaceType,
-  GraphQLList
-} from "https://cdn.skypack.dev/graphql@^16.0.0";
+  GraphQLList,
+} from "https://deno.land/x/graphql_deno@v15.0.0/mod.ts";
+
+export type {
+  GraphQLObjectTypeConfig,
+  GraphQLInterfaceTypeConfig,
+  GraphQLFieldConfigMap
+} from "https://deno.land/x/graphql_deno@v15.0.0/mod.ts";
 
 export { Url } from "https://cdn.skypack.dev/reurl";
 
