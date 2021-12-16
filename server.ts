@@ -3,11 +3,17 @@ import { useQuery } from './schema.ts'
 
 import { prismqlPlayground } from "./web.ts"
 
-export function createServer(port: string | number = 8080) {
+interface IOptional {
+  endpoint?: string
+}
+
+export function createServer(port: string | number = 8080, option?: IOptional) {
+  const endpoint = (option?.endpoint) ? option.endpoint : `http://localhost:${port}`;
+
   async function handler(req: Request): Promise<Response> {
     switch (req.method) {
       case "GET": {
-        return new Response(prismqlPlayground(port), {
+        return new Response(prismqlPlayground(port, endpoint), {
           headers: { "content-type": "text/html" },
         })
       }
@@ -28,7 +34,7 @@ export function createServer(port: string | number = 8080) {
     }
   }
 
-  console.log(`GraphQL Server running on http://localhost:${port}/graphql`);
+  console.log(`GraphQL Server running on ${endpoint}`);
 
   serve(handler, {
     addr: `0.0.0.0:${port}`
