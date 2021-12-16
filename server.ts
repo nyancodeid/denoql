@@ -3,7 +3,7 @@ import { useQuery } from './schema.ts'
 
 import { prismqlPlayground } from "./web.ts"
 
-export function createServer(port: string | number) {
+export function createServer(port: string | number = 8080) {
   async function handler(req: Request): Promise<Response> {
     switch (req.method) {
       case "GET": {
