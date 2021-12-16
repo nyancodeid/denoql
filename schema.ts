@@ -9,10 +9,15 @@ import {
   GraphQLInterfaceType,
   GraphQLList,
   DOMParser,
-  Element
+  Element,
+  Url
 } from "./deps.ts";
 
-import { Url } from "./deps.ts"
+import type {
+  GraphQLFieldConfigMap,
+  GraphQLObjectTypeConfig,
+  GraphQLInterfaceTypeConfig
+} from "./deps.ts"
 
 type TParams = {
   selector?: string
@@ -28,7 +33,7 @@ function getAttributeOfElement(element: Element, name: string) {
   return attribute
 }
 
-function sharedFields() {
+function sharedFields(): GraphQLFieldConfigMap<Element, any> {
   const selector = {
     type: GraphQLString,
     description:
@@ -39,7 +44,7 @@ function sharedFields() {
       type: GraphQLString,
       description: 'The HTML content of the subnodes',
       args: { selector },
-      resolve(element: Element, { selector }: TParams) {
+      resolve(element, { selector }: TParams) {
         element = selector ? element.querySelector(selector)! : element
 
         return element && element.innerHTML
@@ -127,7 +132,7 @@ function sharedFields() {
     class: {
       type: GraphQLString,
       description:
-        'An src attribute of the selected node.',
+        'An class attribute of the selected node.',
       args: {
         selector
       },
@@ -141,7 +146,7 @@ function sharedFields() {
     classList: {
       type: new GraphQLList(GraphQLString),
       description:
-        'An src attribute of the selected node.',
+        'An array of class from the selected node class attribute.',
       args: {
         selector
       },
@@ -273,64 +278,73 @@ function sharedFields() {
   }
 }
 
-const TNode = new GraphQLInterfaceType({
-  name: 'Node',
-  description: 'A DOM node (either an Element or a Document).',
-  fields: sharedFields,
-})
+const TNode = new GraphQLInterfaceType(<GraphQLInterfaceTypeConfig<
+  Element,
+  any
+>>{
+    name: 'Node',
+    description: 'A DOM node (either an Element or a Document).',
+    fields: sharedFields,
+  })
 
-const TDocument = new GraphQLObjectType({
-  name: 'Document',
-  description: 'A DOM document.',
-  interfaces: [TNode],
-  fields: () => ({
-    ...sharedFields(),
-    title: {
-      type: GraphQLString,
-      description: 'The page title',
-      resolve(element: Element) {
-        return element?.ownerDocument?.title
+const TDocument = new GraphQLObjectType(<GraphQLObjectTypeConfig<
+  Element,
+  any
+>>{
+    name: 'Document',
+    description: 'A DOM document.',
+    interfaces: [TNode],
+    fields: () => ({
+      ...sharedFields(),
+      title: {
+        type: GraphQLString,
+        description: 'The page title',
+        resolve(element: Element) {
+          return element?.ownerDocument?.title
+        },
       },
-    },
-  }),
-})
+    }),
+  })
 
-const TElement = new GraphQLObjectType({
-  name: 'Element',
-  description: 'A DOM element.',
-  interfaces: [TNode],
-  fields: () => ({
-    ...sharedFields(),
-    visit: {
-      type: TDocument,
-      description:
-        'If the element is a link, visit the page linked to in the href attribute.',
-      async resolve(element: Element) {
-        const href = element.getAttribute('href')
-        const baseUrl = element.getAttribute('data-baseurl');
+const TElement = new GraphQLObjectType(<GraphQLObjectTypeConfig<
+  Element,
+  any
+>>{
+    name: 'Element',
+    description: 'A DOM element.',
+    interfaces: [TNode],
+    fields: () => ({
+      ...sharedFields(),
+      visit: {
+        type: TDocument,
+        description:
+          'If the element is a link, visit the page linked to in the href attribute.',
+        async resolve(element: Element) {
+          const href = element.getAttribute('href')
+          const baseUrl = element.getAttribute('data-baseurl');
 
-        if (href == null) return null
+          if (href == null) return null
 
-        let url = href;
+          let url = href;
 
-        if (baseUrl) {
-          const base = new Url(href);
-          const uri = base.resolve(baseUrl);
+          if (baseUrl) {
+            const base = new Url(href);
+            const uri = base.resolve(baseUrl);
 
-          url = uri.toString();
-        }
+            url = uri.toString();
+          }
 
-        const html = await fetch(url).then(res => res.text());
-        const dom = new DOMParser().parseFromString(html, 'text/html')
+          const html = await fetch(url).then(res => res.text());
+          const dom = new DOMParser().parseFromString(html, 'text/html')
 
-        return dom?.documentElement;
+          return dom?.documentElement;
+        },
       },
-    },
-  }),
-})
+    }),
+  })
 
 export const schema = new GraphQLSchema({
-  query: new GraphQLObjectType({
+  query: new GraphQLObjectType(<GraphQLObjectTypeConfig<{}, {}>>{
     name: 'Query',
     fields: () => ({
       page: {
@@ -371,8 +385,5 @@ export const schema = new GraphQLSchema({
 })
 
 export const useQuery = (query: string) => {
-  return graphql({
-    schema,
-    source: query
-  })
+  return graphql(schema, query)
 }
