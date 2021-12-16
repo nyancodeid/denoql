@@ -24,6 +24,7 @@ type TParams = {
   name?: string
   url?: string
   source?: string
+  trim?: boolean
 }
 
 function getAttributeOfElement(element: Element, name: string) {
@@ -63,11 +64,20 @@ function sharedFields(): GraphQLFieldConfigMap<Element, any> {
     text: {
       type: GraphQLString,
       description: 'The text content of the selected DOM node',
-      args: { selector },
-      resolve(element: Element, { selector }: TParams) {
+      args: {
+        selector,
+        trim: {
+          type: GraphQLBoolean,
+          description: "Optional text trim. default: false",
+          defaultValue: false
+        }
+      },
+      resolve(element: Element, { selector, trim }: TParams) {
         element = selector ? element.querySelector(selector)! : element
 
-        return element && element.textContent
+        const result = element && element.textContent
+
+        return (trim) ? result.trim() : result;
       },
     },
     tag: {
