@@ -18,6 +18,4 @@ export type {
 
 export { DOMParser, Element } from "https://deno.land/x/deno_dom/deno-dom-wasm.ts";
 
-export { assertEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
-
 export { serve } from "https://deno.land/std@0.117.0/http/server.ts"
