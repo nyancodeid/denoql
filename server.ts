@@ -1,7 +1,7 @@
 import { serve } from "./deps.ts";
 import { useQuery } from './schema.ts'
 
-import { prismqlPlayground } from "./web.ts"
+import { prismqlPlayground } from "./utils/web.ts"
 
 interface IOptional {
   endpoint?: string
