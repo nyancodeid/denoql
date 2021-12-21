@@ -18,7 +18,7 @@ jobs:
           deno-version: 1.17.0
 
       - name: run tests
-        run: deno test --allow-read --allow-write --allow-net tests/*.test.ts --jobs 4
+        run: deno test --allow-read --allow-write --allow-net --jobs 4
 
       - name: run tests no check
-        run: deno test --allow-read --allow-write --allow-net --no-check tests/*.test.ts --jobs 4
+        run: deno test --allow-read --allow-write --allow-net --no-check --jobs 4
