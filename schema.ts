@@ -9,8 +9,7 @@ import {
   GraphQLInterfaceType,
   GraphQLList,
   DOMParser,
-  Element,
-  Url
+  Element
 } from "./deps.ts";
 
 import type {
