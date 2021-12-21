@@ -1,6 +1,8 @@
-import { assertEquals } from "./deps.ts";
+import {
+  assertEquals
+} from "./deps.ts";
 
-import { useQuery } from "./schema.ts"
+import { useQuery } from "../mod.ts"
 
 const DEFAULT_TEST_OPTIONS = {
   sanitizeOps: false,
@@ -837,6 +839,68 @@ Deno.test({
     assertEquals(
       response.data && response.data.page.classes,
       ["mx-2", "my-4", "bg-gray-100"]
+    )
+  },
+  ...DEFAULT_TEST_OPTIONS
+})
+
+Deno.test({
+  name: "meta #35",
+  fn: async () => {
+    const html = `<html><head><title>some title</title><meta name=\\"description\\" content=\\"some description\\"><meta property=\\"og:description\\" content=\\"some description\\"></head><body></body></html>`
+    const query = `{
+      page(source: "${html}") {
+        description: meta(name: "description")
+        og_description: meta(name: "og:description")
+      }
+    }`
+
+    const response = await useQuery(query)
+
+    assertEquals(('error' in response), false);
+    assertEquals(response.data?.page.description, "some description")
+    assertEquals(response.data?.page.og_description, "some description")
+  },
+  ...DEFAULT_TEST_OPTIONS
+})
+
+Deno.test({
+  name: "meta not found #36",
+  fn: async () => {
+    const html = `<html><head><title>some title</title><meta name=\\"description\\" content=\\"some description\\"><meta property=\\"og:description\\" content=\\"some description\\"></head><body></body></html>`
+    const query = `{
+      page(source: "${html}") {
+        keywords: meta(name: "keywords")
+      }
+    }`
+
+    const response = await useQuery(query)
+
+    assertEquals(('error' in response), false);
+    assertEquals(response.data?.page.keywords, null)
+  },
+  ...DEFAULT_TEST_OPTIONS
+})
+
+Deno.test({
+  name: "visit_custom #37",
+  fn: async () => {
+    const query = `{
+      page(url: "https://nyancodeid.github.io/tests/test-custom-visit.html") {
+        link: query(selector: "div.link") {
+          visit_custom(attr: "data-link") {
+            text(selector: "strong")
+          }
+        }
+      }
+    }`
+
+    const response = await useQuery(query)
+
+    assertEquals(('error' in response), false);
+    assertEquals(
+      response.data && response.data.page.link.visit_custom.text,
+      'we managed to visit the link!'
     )
   },
   ...DEFAULT_TEST_OPTIONS

@@ -9,8 +9,7 @@ import {
   GraphQLInterfaceType,
   GraphQLList,
   DOMParser,
-  Element,
-  Url
+  Element
 } from "./deps.ts";
 
 import type {
@@ -19,27 +18,29 @@ import type {
   GraphQLInterfaceTypeConfig
 } from "./deps.ts"
 
+import State from "./utils/state.ts"
+import { resolveURL, getAttributeOfElement } from "./utils/helpers.ts"
+
 type TParams = {
   selector?: string
   name?: string
+  attr?: string
   url?: string
   source?: string
   trim?: boolean
 }
 
-function getAttributeOfElement(element: Element, name: string) {
-  const attribute = element.getAttribute(name)
-  if (attribute == null) return null
+type TContext = {
+  state: State
+}
 
-  return attribute
+const selector = {
+  type: GraphQLString,
+  description:
+    'A [CSS selector](https://developer.mozilla.org/en-US/docs/Learn/CSS/Introduction_to_CSS/Selectors).',
 }
 
 function sharedFields(): GraphQLFieldConfigMap<Element, any> {
-  const selector = {
-    type: GraphQLString,
-    description:
-      'A [CSS selector](https://developer.mozilla.org/en-US/docs/Learn/CSS/Introduction_to_CSS/Selectors).',
-  }
   return {
     content: {
       type: GraphQLString,
@@ -313,12 +314,33 @@ const TDocument = new GraphQLObjectType(<GraphQLObjectTypeConfig<
           return element?.ownerDocument?.title
         },
       },
+      meta: {
+        type: GraphQLString,
+        description: 'The meta content',
+        args: {
+          name: {
+            type: GraphQLString,
+            description: 'meta name or property',
+          }
+        },
+        resolve(element: Element, { name }) {
+          let meta = element?.querySelector(`meta[name='${name}']`)
+
+          if (!meta) {
+            meta = element?.querySelector(`meta[property='${name}']`)
+          }
+
+          if (!meta) return null;
+
+          return getAttributeOfElement(meta, "content")
+        },
+      },
     }),
   })
 
 const TElement = new GraphQLObjectType(<GraphQLObjectTypeConfig<
   Element,
-  any
+  TContext
 >>{
     name: 'Element',
     description: 'A DOM element.',
@@ -329,19 +351,57 @@ const TElement = new GraphQLObjectType(<GraphQLObjectTypeConfig<
         type: TDocument,
         description:
           'If the element is a link, visit the page linked to in the href attribute.',
-        async resolve(element: Element) {
+        async resolve(element: Element, _, context) {
           const href = element.getAttribute('href')
-          const baseUrl = element.getAttribute('data-baseurl');
+          const base_url: string = context.state.get('base');
 
           if (href == null) return null
 
           let url = href;
 
-          if (baseUrl) {
-            const base = new Url(href);
-            const uri = base.resolve(baseUrl);
+          if (base_url) {
+            url = resolveURL(base_url, href);
 
-            url = uri.toString();
+            context.state.set('url', url)
+          }
+
+          const html = await fetch(url).then(res => res.text());
+          const dom = new DOMParser().parseFromString(html, 'text/html')
+
+          return dom?.documentElement;
+        },
+      },
+      visit_custom: {
+        type: TDocument,
+        description:
+          'If the element is a link, visit the page linked to in the href attribute.',
+        args: {
+          selector,
+          attr: {
+            type: GraphQLString,
+            description: 'attribute name'
+          }
+        },
+        async resolve(element: Element, { selector, attr }: TParams, context) {
+          const base_url: string = context.state.get('base');
+
+          element = selector ? element.querySelector(selector)! : element
+
+          if (element == null) return null
+          if (attr == null) {
+            attr = "href";
+          }
+
+          const href = getAttributeOfElement(element, attr)
+
+          if (href == null) return null
+
+          let url = href;
+
+          if (base_url) {
+            url = resolveURL(base_url, href)
+
+            context.state.set('url', url)
           }
 
           const html = await fetch(url).then(res => res.text());
@@ -354,7 +414,7 @@ const TElement = new GraphQLObjectType(<GraphQLObjectTypeConfig<
   })
 
 export const schema = new GraphQLSchema({
-  query: new GraphQLObjectType(<GraphQLObjectTypeConfig<{}, {}>>{
+  query: new GraphQLObjectType(<GraphQLObjectTypeConfig<{}, TContext>>{
     name: 'Query',
     fields: () => ({
       page: {
@@ -370,7 +430,7 @@ export const schema = new GraphQLSchema({
               'A string containing HTML to be used as the source document.',
           },
         },
-        async resolve(_: any, { url, source }: TParams) {
+        async resolve(_, { url, source }: TParams, context) {
           if (!url && !source) {
             throw new Error(
               'You need to provide either a URL or a HTML source string.'
@@ -379,10 +439,12 @@ export const schema = new GraphQLSchema({
 
           if (url) {
             source = await fetch(url).then(res => res.text());
-          }
 
-          if (source && url) {
-            source = source.replaceAll('href=', `data-baseurl='${url}' href=`)
+            context.state.set('base', url)
+            context.state.set('url', url)
+          } else {
+
+            context.state.set('base', "")
           }
 
           const dom = new DOMParser().parseFromString(source!, 'text/html')!
@@ -395,5 +457,9 @@ export const schema = new GraphQLSchema({
 })
 
 export const useQuery = (query: string) => {
-  return graphql(schema, query)
+  const state = new State();
+
+  return graphql(schema, query, {}, {
+    state
+  })
 }

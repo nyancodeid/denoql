@@ -1,0 +1,24 @@
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+      fail-fast: true
+    steps:
+      - uses: actions/checkout@v2
+      - name: download deno
+        uses: denoland/setup-deno@main
+        with:
+          deno-version: 1.17.0
+
+      - name: run tests
+        run: deno test --allow-read --allow-write --allow-net --jobs 4
+
+      - name: run tests no check
+        run: deno test --allow-read --allow-write --allow-net --no-check --jobs 4
