@@ -9,7 +9,8 @@ import {
   GraphQLInterfaceType,
   GraphQLList,
   DOMParser,
-  Element
+  Element,
+  PQueue
 } from "./deps.ts";
 
 import type {
@@ -22,6 +23,7 @@ import State from "./utils/state.ts"
 import { resolveURL, getAttributeOfElement } from "./utils/helpers.ts"
 
 type TParams = {
+  parent?: string
   selector?: string
   name?: string
   attr?: string
@@ -42,6 +44,42 @@ const selector = {
 
 function sharedFields(): GraphQLFieldConfigMap<Element, any> {
   return {
+    index: {
+      type: GraphQLInt,
+      description: 'Node index from parent element',
+      args: { parent: selector },
+      resolve(element: Element, { parent }: TParams, context: TContext) {
+        if (parent) {
+          const document: Element = context.state.get('document');
+          const nodes = Array.from(document.querySelectorAll(parent) ?? []);
+
+          let index = -1;
+
+          for (const node of nodes) {
+            let elementParent = element.parentNode;
+
+            while (elementParent && node.compareDocumentPosition(elementParent) != 0) {
+              if (!elementParent) break;
+
+              elementParent = elementParent.parentNode!;
+            }
+
+            if (!elementParent) continue;
+            if (index != -1) return index;
+
+            index = nodes.indexOf(elementParent);
+          }
+
+          return index;
+        } else {
+          let nodes = Array.from(element.parentElement?.childNodes ?? []);
+
+          return nodes.indexOf(element);
+        }
+
+        return -1;
+      }
+    },
     content: {
       type: GraphQLString,
       description: 'The HTML content of the subnodes',
@@ -79,6 +117,22 @@ function sharedFields(): GraphQLFieldConfigMap<Element, any> {
         const result = element && element.textContent
 
         return (trim) ? result.trim() : result;
+      },
+    },
+    table: {
+      type: new GraphQLList(new GraphQLList(GraphQLString)),
+      description: 'Get value from table rows',
+      args: {
+        selector
+      },
+      resolve(element: Element, { selector }: TParams) {
+        element = selector ? element.querySelector(selector)! : element
+
+        const result = element && Array.from(
+          element.querySelectorAll('tr')
+        ).map(row => Array.from((row as Element).querySelectorAll('td')).map(td => td.textContent.trim()));
+
+        return result.filter(row => row.length > 0);
       },
     },
     tag: {
@@ -365,7 +419,8 @@ const TElement = new GraphQLObjectType(<GraphQLObjectTypeConfig<
             context.state.set('url', url)
           }
 
-          const html = await fetch(url).then(res => res.text());
+          const options: RequestInit = context.state.get('fetch_options')
+          const html = await (context.state.get('queue') as PQueue).add(() => fetch(url, options).then(res => res.text()));
           const dom = new DOMParser().parseFromString(html, 'text/html')
 
           return dom?.documentElement;
@@ -404,8 +459,10 @@ const TElement = new GraphQLObjectType(<GraphQLObjectTypeConfig<
             context.state.set('url', url)
           }
 
-          const html = await fetch(url).then(res => res.text());
-          const dom = new DOMParser().parseFromString(html, 'text/html')
+          const html = await (context.state.get('queue') as PQueue).add(() => fetch(url).then(res => res.text()));
+          const dom = new DOMParser().parseFromString(html, 'text/html');
+
+          context.state.set('document', dom?.documentElement);
 
           return dom?.documentElement;
         },
@@ -438,7 +495,9 @@ export const schema = new GraphQLSchema({
           }
 
           if (url) {
-            source = await fetch(url).then(res => res.text());
+            const options: RequestInit = context.state.get('fetch_options')
+
+            source = await fetch(url, options).then(res => res.text());
 
             context.state.set('base', url)
             context.state.set('url', url)
@@ -449,6 +508,8 @@ export const schema = new GraphQLSchema({
 
           const dom = new DOMParser().parseFromString(source!, 'text/html')!
 
+          context.state.set('document', dom.documentElement);
+
           return dom.documentElement;
         },
       },
@@ -456,8 +517,28 @@ export const schema = new GraphQLSchema({
   }),
 })
 
-export const useQuery = (query: string) => {
+type QueryOptions = {
+  concurrency?: number,
+  fetch_options?: RequestInit
+}
+
+export const useQuery = (query: string, options?: Partial<QueryOptions>) => {
+  const final_options = Object.assign({
+    concurrency: navigator.hardwareConcurrency * 2,
+    fetch_options: {}
+  }, options);
+
   const state = new State();
+  const queue = new PQueue({
+    concurrency: final_options.concurrency
+  })
+
+  state.set("queue", queue);
+  state.set("fetch_options", final_options.fetch_options);
+
+  for (const [key, value] of Object.entries(final_options)) {
+    state.set(key, value);
+  }
 
   return graphql(schema, query, {}, {
     state
