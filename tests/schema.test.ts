@@ -1,5 +1,6 @@
 import {
-  assertEquals
+  assertEquals,
+  assertNotEquals
 } from "./deps.ts";
 
 import { useQuery } from "../mod.ts"
@@ -902,6 +903,80 @@ Deno.test({
       response.data && response.data.page.link.visit_custom.text,
       'we managed to visit the link!'
     )
+  },
+  ...DEFAULT_TEST_OPTIONS
+})
+
+Deno.test({
+  name: "table #38",
+  fn: async () => {
+    const query = `{
+      page(url: "https://nyancodeid.github.io/tests/kurs.html") {
+        table: query(selector: "#scrolling-table") {
+          values: table(attr: "table.m-table-kurs")
+        }
+      }
+    }`
+
+    const response = await useQuery(query)
+
+    assertEquals(('error' in response), false);
+    assertNotEquals(
+      response.data && response.data.bca_kurs.table.length,
+      0
+    )
+  },
+  ...DEFAULT_TEST_OPTIONS
+})
+
+Deno.test({
+  name: "index #39",
+  fn: async () => {
+    const query = `{
+      page(source: "<html><head><title>some title</title></head><body><ul class=\\"items\\"><li>one</li><li>two</li><li>three</li><li>four</li></ul></body></html>") {
+        items: queryAll(selector: ".items li") {
+          index
+          text
+        }
+      }
+    }`
+
+    const response = await useQuery(query)
+
+    assertEquals(('error' in response), false);
+    assertNotEquals(
+      response.data && response.data.page.items.length,
+      0
+    )
+    assertEquals(response.data?.page.items.length, 4)
+    assertEquals(response.data?.page.items[0].index, 0)
+    assertEquals(response.data?.page.items[2].text, "three")
+  },
+  ...DEFAULT_TEST_OPTIONS
+})
+
+Deno.test({
+  name: "index with selector #40",
+  fn: async () => {
+    const query = `{
+      page(source: "<html><head><title>some title</title></head><body><ul class=\\"items\\"><li><i>one</i></li><li><i>two</i></li><li><i>three</i></li><li><i>four</i></li></ul></body></html>") {
+        items: queryAll(selector: ".items li i") {
+          index(parent: ".items li")
+          text
+        }
+      }
+    }`
+
+    const response = await useQuery(query)
+
+    assertEquals(('error' in response), false);
+    assertNotEquals(
+      response.data && response.data.page.items.length,
+      0
+    )
+    assertEquals(response.data?.page.items.length, 4)
+    assertEquals(response.data?.page.items[0].index, 0)
+    assertEquals(response.data?.page.items[2].text, "three")
   },
   ...DEFAULT_TEST_OPTIONS
 })
