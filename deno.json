@@ -1,7 +1,7 @@
 {
   "tasks": {
-    "unit:test": "deno test -A --no-check tests/*.test.ts",
-    "test": "deno run -A --unsafely-ignore-certificate-errors --no-check test.ts",
+    "test": "deno test -A --no-check tests/*.test.ts",
+    "test:dev": "deno run -A --unsafely-ignore-certificate-errors --no-check test.ts",
     "serve": "deno run -A --no-check serve.ts"
   },
   "lint": {
