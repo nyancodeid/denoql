@@ -1,6 +1,6 @@
 import { Element, PQueue } from "../deps.ts";
 
-type TStateValue = RequestInit | PQueue | Element | number | string | null | undefined;
+type TStateValue = RequestInit | PQueue | Element | number | boolean | string | null | undefined;
 
 export default class State {
   private states = <{
