@@ -1,19 +1,31 @@
 export {
   graphql,
   GraphQLSchema,
+  GraphQLObjectType,
+  GraphQLInterfaceType,
+} from "https://deno.land/x/graphql_deno@v15.0.0/mod.ts";
+
+import {
   GraphQLInt,
   GraphQLString,
   GraphQLBoolean,
-  GraphQLObjectType,
   GraphQLNonNull,
-  GraphQLInterfaceType,
   GraphQLList,
 } from "https://deno.land/x/graphql_deno@v15.0.0/mod.ts";
+
+export const GRAPHQL_TYPE = {
+  INT: GraphQLInt,
+  STRING: GraphQLString,
+  BOOLEAN: GraphQLBoolean,
+  NOT_NULL: GraphQLNonNull,
+  LIST: GraphQLList,
+}
 
 export type {
   GraphQLObjectTypeConfig,
   GraphQLInterfaceTypeConfig,
-  GraphQLFieldConfigMap
+  GraphQLFieldConfigMap,
+  ExecutionResult
 } from "https://deno.land/x/graphql_deno@v15.0.0/mod.ts";
 
 export { default as PQueue } from "https://deno.land/x/p_queue@1.0.1/mod.ts"
